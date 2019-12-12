@@ -49,7 +49,8 @@ myXmonad = do
 
 data Settings =
   Settings
-    { setKeyboard :: KeyBoard
+    { setXmobar :: FilePath
+    , setKeyboard :: KeyBoard
     }
   deriving (Show, Eq)
 
@@ -62,6 +63,14 @@ parseSettings = info (helper <*> parseArgs) inf
 parseArgs :: Parser Settings
 parseArgs =
   Settings <$>
+  strOption
+    (mconcat
+       [ long "xmobar"
+       , metavar "PATH"
+       , help "The path to the xmobar binary"
+       , value "xmobar"
+       , showDefault
+       ]) <*>
   option
     (maybeReader parseKeyboard)
     (mconcat
@@ -75,7 +84,7 @@ parseArgs =
 data KeyBoard
   = KinesisDvorak
   | LaptopDvorak
-  deriving (Show, Eq, Enum,Bounded)
+  deriving (Show, Eq, Enum, Bounded)
 
 parseKeyboard :: String -> Maybe KeyBoard
 parseKeyboard =
