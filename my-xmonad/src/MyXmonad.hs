@@ -29,7 +29,7 @@ import XMonad.Util.Run (hPutStrLn, spawnPipe)
 myXmonad :: IO ()
 myXmonad = do
   Settings {..} <- execParser parseSettings
-  xmprocs <- spawnXmobars
+  xmprocs <- spawnXmobars setXmobar
   launch $
     def
       { normalBorderColor = "#657b83"
@@ -99,10 +99,10 @@ renderKeyboard =
     KinesisDvorak -> "kinesis.dvorak"
     LaptopDvorak -> "laptop.dvorak"
 
-spawnXmobars :: IO [Handle]
-spawnXmobars = do
+spawnXmobars ::FilePath -> IO [Handle]
+spawnXmobars xmobar = do
   displays <- countScreens
-  forM [0 :: Int .. displays - 1] $ \d -> spawnPipe $ "xmobar -x " ++ show d
+  forM [0 :: Int .. displays - 1] $ \d -> spawnPipe $ unwords [xmobar, "--screen", show d]
 
 myManageHook :: ManageHook
 myManageHook = manageDocks
