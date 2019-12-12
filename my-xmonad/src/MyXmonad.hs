@@ -1,16 +1,18 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
 module MyXmonad
   ( myXmonad
   ) where
 
-import XMonad
-
 import Control.Monad
 import Data.Map (Map)
 import qualified Data.Map as M
+import Options.Applicative
 import Prelude hiding (mod)
+import System.IO (Handle)
+import XMonad
 import qualified XMonad.Actions.PhysicalScreens as S
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks (avoidStruts)
@@ -24,12 +26,10 @@ import XMonad.Layout.Spacing
 import qualified XMonad.StackSet as W
 import XMonad.Util.Run (hPutStrLn, spawnPipe)
 
-import System.IO (Handle)
-
 myXmonad :: IO ()
 myXmonad = do
+  Settings {..} <- execParser parseSettings
   xmprocs <- spawnXmobars
-  let myKeyboard = KinesisDvorak
   launch $
     def
       { normalBorderColor = "#657b83"
@@ -38,19 +38,57 @@ myXmonad = do
       , layoutHook = myLayoutHook
       , manageHook = myManageHook
       , handleEventHook = fullscreenEventHook
-      , workspaces = myWorkspaces myKeyboard
+      , workspaces = myWorkspaces setKeyboard
       , modMask = mod4Mask
-      , keys = myKeys myKeyboard
+      , keys = myKeys setKeyboard
       , mouseBindings = myMouse
       , borderWidth = 1
       , logHook = myLogHook xmprocs
       , startupHook = myStartupHook
       }
 
+data Settings =
+  Settings
+    { setKeyboard :: KeyBoard
+    }
+  deriving (Show, Eq)
+
+parseSettings :: ParserInfo Settings
+parseSettings = info (helper <*> parseArgs) inf
+  where
+    inf = fullDesc <> progDesc description
+    description = "Xmonad"
+
+parseArgs :: Parser Settings
+parseArgs =
+  Settings <$>
+  option
+    (maybeReader parseKeyboard)
+    (mconcat
+       [ long "keyboard"
+       , metavar "KEYBOARD"
+       , help $
+         "Which keyboard settings to use, options: " <>
+         show (map renderKeyboard [minBound .. maxBound])
+       ])
+
 data KeyBoard
   = KinesisDvorak
   | LaptopDvorak
-  deriving (Show, Eq)
+  deriving (Show, Eq, Enum,Bounded)
+
+parseKeyboard :: String -> Maybe KeyBoard
+parseKeyboard =
+  \case
+    "kinesis.dvorak" -> Just KinesisDvorak
+    "laptop.dvorak" -> Just LaptopDvorak
+    _ -> Nothing
+
+renderKeyboard :: KeyBoard -> String
+renderKeyboard =
+  \case
+    KinesisDvorak -> "kinesis.dvorak"
+    LaptopDvorak -> "laptop.dvorak"
 
 spawnXmobars :: IO [Handle]
 spawnXmobars = do

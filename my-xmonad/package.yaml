@@ -12,6 +12,7 @@ library:
   source-dirs: src
   dependencies:
   - containers
+  - optparse-applicative
   - xmonad
   - xmonad-contrib
 
