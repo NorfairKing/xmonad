@@ -186,15 +186,15 @@ laptopDvorakKeyboardMapping =
 
 keypadQuertyKeyboardMapping :: KeyboardKeyMapping
 keypadQuertyKeyboardMapping =
-  [ ('1', xK_1)
-  , ('2', xK_2)
-  , ('3', xK_3)
-  , ('4', xK_4)
-  , ('5', xK_5)
-  , ('6', xK_6)
-  , ('7', xK_7)
-  , ('8', xK_8)
-  , ('9', xK_9)
+  [ ('1', xK_KP_1)
+  , ('2', xK_KP_2)
+  , ('3', xK_KP_3)
+  , ('4', xK_KP_4)
+  , ('5', xK_KP_5)
+  , ('6', xK_KP_6)
+  , ('7', xK_KP_7)
+  , ('8', xK_KP_8)
+  , ('9', xK_KP_9)
   ]
 
 myKeys :: KeyBoard -> XConfig Layout -> Map (ButtonMask, KeySym) (X ())
