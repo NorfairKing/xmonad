@@ -58,8 +58,8 @@ data Settings =
 parseSettings :: ParserInfo Settings
 parseSettings = info (helper <*> parseArgs) inf
   where
-    inf = fullDesc <> progDesc description
-    description = "Xmonad"
+    inf = fullDesc <> progDesc desc
+    desc = "Xmonad"
 
 parseArgs :: Parser Settings
 parseArgs =
@@ -85,6 +85,7 @@ parseArgs =
 data KeyBoard
   = KinesisDvorak
   | LaptopDvorak
+  | KeypadQuerty
   deriving (Show, Eq, Enum, Bounded)
 
 parseKeyboard :: String -> Maybe KeyBoard
@@ -92,6 +93,7 @@ parseKeyboard =
   \case
     "kinesis.dvorak" -> Just KinesisDvorak
     "laptop.dvorak" -> Just LaptopDvorak
+    "keypad.querty" -> Just KeypadQuerty
     _ -> Nothing
 
 renderKeyboard :: KeyBoard -> String
@@ -99,11 +101,12 @@ renderKeyboard =
   \case
     KinesisDvorak -> "kinesis.dvorak"
     LaptopDvorak -> "laptop.dvorak"
+    KeypadQuerty -> "keypad.querty"
 
 spawnXmobars :: FilePath -> IO [Handle]
-spawnXmobars xmobar = do
+spawnXmobars xmobarPath = do
   displays <- countScreens
-  forM [0 :: Int .. displays - 1] $ \d -> spawnPipe $ unwords [xmobar, "--screen", show d]
+  forM [0 :: Int .. displays - 1] $ \d -> spawnPipe $ unwords [xmobarPath, "--screen", show d]
 
 myManageHook :: ManageHook
 myManageHook = manageDocks
@@ -124,12 +127,16 @@ myWorkspaces =
   \case
     KinesisDvorak -> kinesisDvorakWorkspaces
     LaptopDvorak -> laptopDvorakWorkspaces
+    KeypadQuerty -> keypadQuertyWorkspaces
 
 kinesisDvorakWorkspaces :: [WorkspaceId]
 kinesisDvorakWorkspaces = keyboardMappingWorkspaces kinesisDvorakKeyboardMapping
 
 laptopDvorakWorkspaces :: [WorkspaceId]
 laptopDvorakWorkspaces = keyboardMappingWorkspaces laptopDvorakKeyboardMapping
+
+keypadQuertyWorkspaces :: [WorkspaceId]
+keypadQuertyWorkspaces = keyboardMappingWorkspaces keypadQuertyKeyboardMapping
 
 type KeyboardKeyMapping = [(Char, KeySym)]
 
@@ -177,11 +184,25 @@ laptopDvorakKeyboardMapping =
   , ('w', xK_w)
   ]
 
+keypadQuertyKeyboardMapping :: KeyboardKeyMapping
+keypadQuertyKeyboardMapping =
+  [ ('1', xK_1)
+  , ('2', xK_2)
+  , ('3', xK_3)
+  , ('4', xK_4)
+  , ('5', xK_5)
+  , ('6', xK_6)
+  , ('7', xK_7)
+  , ('8', xK_8)
+  , ('9', xK_9)
+  ]
+
 myKeys :: KeyBoard -> XConfig Layout -> Map (ButtonMask, KeySym) (X ())
 myKeys =
   \case
     KinesisDvorak -> kinesisDvorakKeys
     LaptopDvorak -> laptopDvorakKeys
+    KeypadQuerty -> keypadQuertyKeys
 
 kinesisDvorakKeys :: XConfig Layout -> Map (ButtonMask, KeySym) (X ())
 kinesisDvorakKeys XConfig {modMask = mod, terminal} =
@@ -230,12 +251,33 @@ laptopDvorakKeys XConfig {modMask = mod, terminal} =
     ] `M.union`
   keyboardMappingNavigationKeys mod laptopDvorakKeyboardMapping
 
+keypadQuertyKeys :: XConfig Layout -> Map (ButtonMask, KeySym) (X ())
+keypadQuertyKeys XConfig {modMask = mod, terminal} =
+  M.fromList
+    [ ((mod, xK_f), spawn terminal)
+    , ((mod, xK_d), closeWindow)
+    , ((mod, xK_o), focusWindowDown)
+    , ((mod .|. shiftMask, xK_o), swapWindowDown)
+    , ((mod, xK_e), focusWindowUp)
+    , ((mod .|. shiftMask, xK_e), swapWindowUp)
+    , ((mod, xK_comma), shrinkWindow)
+    , ((mod, xK_period), expandWindow)
+    , ((mod, xK_q), lessWindows)
+    , ((mod, xK_j), moreWindows)
+    , ((mod, xK_space), nextLayout)
+    , ((mod, xK_Tab), nextWindow)
+    , ((mod .|. shiftMask, xK_Tab), previousWindow)
+    , ((mod, xK_b), internet)
+    , ((mod, xK_BackSpace), tileAgain)
+    ] `M.union`
+  keyboardMappingNavigationKeys mod keypadQuertyKeyboardMapping
+
 keyboardMappingNavigationKeys :: ButtonMask -> KeyboardKeyMapping -> Map (ButtonMask, KeySym) (X ())
 keyboardMappingNavigationKeys mod km =
   M.fromList
-    [ ((mask .|. mod, key), windows $ switch [ws])
+    [ ((mask_ .|. mod, key), windows $ switch_ [ws])
     | (ws, key) <- km
-    , (switch, mask) <- [(W.greedyView, 0), (W.shift, shiftMask)]
+    , (switch_, mask_) <- [(W.greedyView, 0), (W.shift, shiftMask)]
     ] `M.union`
   (planeKeys mod (Lines 4) Finite)
 
