@@ -14,6 +14,7 @@ import Prelude hiding (mod)
 import System.IO (Handle)
 import XMonad
 import qualified XMonad.Actions.PhysicalScreens as S
+import XMonad.Actions.Plane (Limits(Finite), Lines(..), planeKeys)
 import XMonad.Hooks.DynamicLog
 import XMonad.Hooks.ManageDocks (avoidStruts)
 import XMonad.Hooks.ManageDocks
@@ -99,7 +100,7 @@ renderKeyboard =
     KinesisDvorak -> "kinesis.dvorak"
     LaptopDvorak -> "laptop.dvorak"
 
-spawnXmobars ::FilePath -> IO [Handle]
+spawnXmobars :: FilePath -> IO [Handle]
 spawnXmobars xmobar = do
   displays <- countScreens
   forM [0 :: Int .. displays - 1] $ \d -> spawnPipe $ unwords [xmobar, "--screen", show d]
@@ -235,7 +236,8 @@ keyboardMappingNavigationKeys mod km =
     [ ((mask .|. mod, key), windows $ switch [ws])
     | (ws, key) <- km
     , (switch, mask) <- [(W.greedyView, 0), (W.shift, shiftMask)]
-    ]
+    ] `M.union`
+  (planeKeys mod (Lines 4) Finite)
 
 internet :: X ()
 internet = spawn "firefox"
