@@ -15,8 +15,8 @@ import System.IO (Handle)
 import XMonad
 import qualified XMonad.Actions.PhysicalScreens as S
 import XMonad.Actions.Plane (Limits(Finite), Lines(..), planeKeys)
+import XMonad.Hooks.DynamicBars
 import XMonad.Hooks.DynamicLog
-import XMonad.Hooks.ManageDocks (avoidStruts)
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.SetWMName
 import XMonad.Layout.Fullscreen
@@ -30,7 +30,6 @@ import XMonad.Util.Run (hPutStrLn, spawnPipe)
 myXmonad :: IO ()
 myXmonad = do
   Settings {..} <- execParser parseSettings
-  xmprocs <- spawnXmobars setXmobar
   launch $
     def
       { normalBorderColor = "#657b83"
@@ -38,14 +37,14 @@ myXmonad = do
       , terminal = "urxvt"
       , layoutHook = myLayoutHook
       , manageHook = myManageHook
-      , handleEventHook = fullscreenEventHook
+      , handleEventHook = handleEventHook def <+> docksEventHook
       , workspaces = myWorkspaces setKeyboard
       , modMask = mod4Mask
       , keys = myKeys setKeyboard
       , mouseBindings = myMouse
       , borderWidth = 1
-      , logHook = myLogHook xmprocs
-      , startupHook = myStartupHook
+      , logHook = myLogHook
+      , startupHook = myStartupHook setXmobar
       }
 
 data Settings =
@@ -103,24 +102,23 @@ renderKeyboard =
     LaptopDvorak -> "laptop.dvorak"
     KeypadQuerty -> "keypad.querty"
 
-spawnXmobars :: FilePath -> IO [Handle]
-spawnXmobars xmobarPath = do
-  displays <- countScreens
-  forM [0 :: Int .. displays - 1] $ \d -> spawnPipe $ unwords [xmobarPath, "--screen", show d]
-
 myManageHook :: ManageHook
-myManageHook = manageDocks
+myManageHook = manageDocks <+> manageHook def
 
-myLogHook :: [Handle] -> X ()
-myLogHook xmprocs =
-  dynamicLogWithPP $
-  xmobarPP
-    { ppOutput = \s -> mapM_ (`hPutStrLn` s) xmprocs
-    , ppTitle = xmobarColor "#268BD2" "" . shorten 80
-    , ppCurrent = xmobarColor "#268BD2" "" . wrap "[" "]"
+myLogHook :: X ()
+myLogHook = multiPP myLogPPActive myLogPP
+
+myLogPP :: PP
+myLogPP =
+  def
+    { ppCurrent = xmobarColor "#268BD2" "" . wrap "[" "]"
     , ppVisible = xmobarColor "#657b83" "" . wrap "(" ")"
     , ppUrgent = xmobarColor "#0000ff" "" . wrap "{" "}"
+    , ppTitle = xmobarColor "#268BD2" "" . shorten 80
     }
+
+myLogPPActive :: PP
+myLogPPActive = myLogPP
 
 myWorkspaces :: KeyBoard -> [WorkspaceId]
 myWorkspaces =
@@ -369,7 +367,15 @@ myLayoutHook = avoidStruts (full ||| tiled ||| mtiled)
     tileSpacing = 3
 
 -- | Startup
-myStartupHook :: X ()
-myStartupHook
+myStartupHook :: FilePath -> X ()
+myStartupHook xmobarPath
     -- Make Java GUI's work
- = setWMName "LG3D"
+ = do
+  setWMName "LG3D"
+  dynStatusBarStartup (barCreator xmobarPath) barDestroyer
+
+barCreator :: FilePath -> DynamicStatusBar
+barCreator xmobarPath (S sid) = spawnPipe $ unwords [xmobarPath, " --screen ", show sid]
+
+barDestroyer :: DynamicStatusBarCleanup
+barDestroyer = pure ()
