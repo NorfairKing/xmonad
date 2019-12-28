@@ -30,6 +30,9 @@ import XMonad.Util.Run (hPutStrLn, spawnPipe)
 myXmonad :: IO ()
 myXmonad = do
   Settings {..} <- execParser parseSettings
+  when setSetKeyboardLayout $ spawn $ "xmodmap .keyboards/" ++ renderKeyboard setKeyboard
+  spawn "xset r rate 250 30"
+  spawn "redshift -l 50:0"
   launch $
     def
       { normalBorderColor = "#657b83"
@@ -50,7 +53,9 @@ myXmonad = do
 data Settings =
   Settings
     { setXmobar :: FilePath
+    , setRedshift :: FilePath
     , setKeyboard :: KeyBoard
+    , setSetKeyboardLayout :: Bool
     }
   deriving (Show, Eq)
 
@@ -71,6 +76,14 @@ parseArgs =
        , value "xmobar"
        , showDefault
        ]) <*>
+  strOption
+    (mconcat
+       [ long "redshift"
+       , metavar "PATH"
+       , help "The path to the redshift binary"
+       , value "redshift"
+       , showDefault
+       ]) <*>
   option
     (maybeReader parseKeyboard)
     (mconcat
@@ -79,12 +92,18 @@ parseArgs =
        , help $
          "Which keyboard settings to use, options: " <>
          show (map renderKeyboard [minBound .. maxBound])
-       ])
+       ]) <*>
+  (flag'
+    True
+    (mconcat [long "set-keyboard-layout", help "Set the keyboard layout too"]) <|>
+  flag'
+    False
+    (mconcat [long "no-set-keyboard-layout", help "Don't set the keyboard layout too"]) <|> pure True)
 
 data KeyBoard
   = KinesisDvorak
   | LaptopDvorak
-  | KeypadQuerty
+  | NumpadQwerty
   deriving (Show, Eq, Enum, Bounded)
 
 parseKeyboard :: String -> Maybe KeyBoard
@@ -92,7 +111,7 @@ parseKeyboard =
   \case
     "kinesis.dvorak" -> Just KinesisDvorak
     "laptop.dvorak" -> Just LaptopDvorak
-    "keypad.querty" -> Just KeypadQuerty
+    "numpad.qwerty" -> Just NumpadQwerty
     _ -> Nothing
 
 renderKeyboard :: KeyBoard -> String
@@ -100,7 +119,7 @@ renderKeyboard =
   \case
     KinesisDvorak -> "kinesis.dvorak"
     LaptopDvorak -> "laptop.dvorak"
-    KeypadQuerty -> "keypad.querty"
+    NumpadQwerty -> "numpad.qwerty"
 
 myManageHook :: ManageHook
 myManageHook = manageDocks <+> manageHook def
@@ -125,7 +144,7 @@ myWorkspaces =
   \case
     KinesisDvorak -> kinesisDvorakWorkspaces
     LaptopDvorak -> laptopDvorakWorkspaces
-    KeypadQuerty -> keypadQuertyWorkspaces
+    NumpadQwerty -> numpadQwertyWorkspaces
 
 kinesisDvorakWorkspaces :: [WorkspaceId]
 kinesisDvorakWorkspaces = keyboardMappingWorkspaces kinesisDvorakKeyboardMapping
@@ -133,8 +152,8 @@ kinesisDvorakWorkspaces = keyboardMappingWorkspaces kinesisDvorakKeyboardMapping
 laptopDvorakWorkspaces :: [WorkspaceId]
 laptopDvorakWorkspaces = keyboardMappingWorkspaces laptopDvorakKeyboardMapping
 
-keypadQuertyWorkspaces :: [WorkspaceId]
-keypadQuertyWorkspaces = keyboardMappingWorkspaces keypadQuertyKeyboardMapping
+numpadQwertyWorkspaces :: [WorkspaceId]
+numpadQwertyWorkspaces = keyboardMappingWorkspaces numpadQwertyKeyboardMapping
 
 type KeyboardKeyMapping = [(Char, KeySym)]
 
@@ -182,8 +201,8 @@ laptopDvorakKeyboardMapping =
   , ('w', xK_w)
   ]
 
-keypadQuertyKeyboardMapping :: KeyboardKeyMapping
-keypadQuertyKeyboardMapping =
+numpadQwertyKeyboardMapping :: KeyboardKeyMapping
+numpadQwertyKeyboardMapping =
   [ ('1', xK_KP_1)
   , ('2', xK_KP_2)
   , ('3', xK_KP_3)
@@ -200,7 +219,7 @@ myKeys =
   \case
     KinesisDvorak -> kinesisDvorakKeys
     LaptopDvorak -> laptopDvorakKeys
-    KeypadQuerty -> keypadQuertyKeys
+    NumpadQwerty -> numpadQwertyKeys
 
 kinesisDvorakKeys :: XConfig Layout -> Map (ButtonMask, KeySym) (X ())
 kinesisDvorakKeys XConfig {modMask = mod, terminal} =
@@ -249,8 +268,8 @@ laptopDvorakKeys XConfig {modMask = mod, terminal} =
     ] `M.union`
   keyboardMappingNavigationKeys mod laptopDvorakKeyboardMapping
 
-keypadQuertyKeys :: XConfig Layout -> Map (ButtonMask, KeySym) (X ())
-keypadQuertyKeys XConfig {modMask = mod, terminal} =
+numpadQwertyKeys :: XConfig Layout -> Map (ButtonMask, KeySym) (X ())
+numpadQwertyKeys XConfig {modMask = mod, terminal} =
   M.fromList
     [ ((mod, xK_f), spawn terminal)
     , ((mod, xK_d), closeWindow)
@@ -268,7 +287,7 @@ keypadQuertyKeys XConfig {modMask = mod, terminal} =
     , ((mod, xK_b), internet)
     , ((mod, xK_BackSpace), tileAgain)
     ] `M.union`
-  keyboardMappingNavigationKeys mod keypadQuertyKeyboardMapping
+  keyboardMappingNavigationKeys mod numpadQwertyKeyboardMapping
 
 keyboardMappingNavigationKeys :: ButtonMask -> KeyboardKeyMapping -> Map (ButtonMask, KeySym) (X ())
 keyboardMappingNavigationKeys mod km =
@@ -354,8 +373,8 @@ myMouse XConfig {modMask = mod} =
     ]
 
 myLayoutHook = avoidStruts (full ||| tiled ||| mtiled)
-  where
     -- Fullscreen (default)
+  where
     full = named "full" $ mySpacing $ noBorders Full
     -- Split vertically with phi as the ratio between the widths
     tiled = named "tiled" $ mySpacing $ Tall 1 (5 / 100) (1 / (toRational phi))
