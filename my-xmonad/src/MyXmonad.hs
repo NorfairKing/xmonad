@@ -32,7 +32,7 @@ myXmonad = do
   Settings {..} <- execParser parseSettings
   when setSetKeyboardLayout $ spawn $ "xmodmap .keyboards/" ++ renderKeyboard setKeyboard
   spawn "xset r rate 250 30"
-  spawn "redshift -l 50:0"
+  spawn $ setRedshift <> " -l 50:0"
   launch $
     def
       { normalBorderColor = "#657b83"
@@ -93,12 +93,9 @@ parseArgs =
          "Which keyboard settings to use, options: " <>
          show (map renderKeyboard [minBound .. maxBound])
        ]) <*>
-  (flag'
-    True
-    (mconcat [long "set-keyboard-layout", help "Set the keyboard layout too"]) <|>
-  flag'
-    False
-    (mconcat [long "no-set-keyboard-layout", help "Don't set the keyboard layout too"]) <|> pure True)
+  (flag' True (mconcat [long "set-keyboard-layout", help "Set the keyboard layout too"]) <|>
+   flag' False (mconcat [long "no-set-keyboard-layout", help "Don't set the keyboard layout too"]) <|>
+   pure True)
 
 data KeyBoard
   = KinesisDvorak
