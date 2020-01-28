@@ -30,7 +30,8 @@ import XMonad.Util.Run (hPutStrLn, spawnPipe)
 myXmonad :: IO ()
 myXmonad = do
   Settings {..} <- execParser parseSettings
-  when setSetKeyboardLayout $ spawn $ "xmodmap .keyboards/" ++ renderKeyboard setKeyboard
+  when setSetKeyboardLayout $
+    spawn $ "xmodmap .keyboards/" ++ renderKeyboard setKeyboard
   spawn "xset r rate 250 30"
   spawn $ setRedshift <> " -l 50:0"
   launch $
@@ -93,8 +94,15 @@ parseArgs =
          "Which keyboard settings to use, options: " <>
          show (map renderKeyboard [minBound .. maxBound])
        ]) <*>
-  (flag' True (mconcat [long "set-keyboard-layout", help "Set the keyboard layout too"]) <|>
-   flag' False (mconcat [long "no-set-keyboard-layout", help "Don't set the keyboard layout too"]) <|>
+  (flag'
+     True
+     (mconcat [long "set-keyboard-layout", help "Set the keyboard layout too"]) <|>
+   flag'
+     False
+     (mconcat
+        [ long "no-set-keyboard-layout"
+        , help "Don't set the keyboard layout too"
+        ]) <|>
    pure True)
 
 data KeyBoard
@@ -262,6 +270,8 @@ laptopDvorakKeys XConfig {modMask = mod, terminal} =
     , ((mod .|. shiftMask, xK_Tab), previousWindow)
     , ((mod, xK_b), internet)
     , ((mod, xK_BackSpace), tileAgain)
+    , ((mod, xK_F5), lightDown)
+    , ((mod, xK_F6), lightUp)
     ] `M.union`
   keyboardMappingNavigationKeys mod laptopDvorakKeyboardMapping
 
@@ -283,10 +293,13 @@ numpadQwertyKeys XConfig {modMask = mod, terminal} =
     , ((mod .|. shiftMask, xK_Tab), previousWindow)
     , ((mod, xK_b), internet)
     , ((mod, xK_BackSpace), tileAgain)
+    , ((mod, xK_F4), lightDown)
+    , ((mod, xK_F5), lightUp)
     ] `M.union`
   keyboardMappingNavigationKeys mod numpadQwertyKeyboardMapping
 
-keyboardMappingNavigationKeys :: ButtonMask -> KeyboardKeyMapping -> Map (ButtonMask, KeySym) (X ())
+keyboardMappingNavigationKeys ::
+     ButtonMask -> KeyboardKeyMapping -> Map (ButtonMask, KeySym) (X ())
 keyboardMappingNavigationKeys mod km =
   M.fromList
     [ ((mask_ .|. mod, key), windows $ switch_ [ws])
@@ -360,13 +373,21 @@ moreWindows = sendMessage (IncMasterN 1)
 lessWindows :: X ()
 lessWindows = sendMessage (IncMasterN (-1))
 
+lightUp :: X ()
+lightUp = spawn "light -A 5"
+
+lightDown :: X ()
+lightDown = spawn "light -U 5"
+
 myMouse :: XConfig Layout -> M.Map (KeyMask, Button) (Window -> X ())
 myMouse XConfig {modMask = mod} =
   M.fromList
         -- Left_mouse_button    Set the window to floating mode and mov by dragging
-    [ ((mod, button1), \w -> focus w >> mouseMoveWindow w >> windows W.shiftMaster)
+    [ ( (mod, button1)
+      , \w -> focus w >> mouseMoveWindow w >> windows W.shiftMaster)
         -- Right_mouse_button   Set the window to floating mode and resize by dragging
-    , ((mod, button3), (\w -> focus w >> mouseResizeWindow w >> windows W.shiftMaster))
+    , ( (mod, button3)
+      , (\w -> focus w >> mouseResizeWindow w >> windows W.shiftMaster))
     ]
 
 myLayoutHook = avoidStruts (full ||| tiled ||| mtiled)
@@ -391,7 +412,8 @@ myStartupHook xmobarPath
   dynStatusBarStartup (barCreator xmobarPath) barDestroyer
 
 barCreator :: FilePath -> DynamicStatusBar
-barCreator xmobarPath (S sid) = spawnPipe $ unwords [xmobarPath, " --screen ", show sid]
+barCreator xmobarPath (S sid) =
+  spawnPipe $ unwords [xmobarPath, " --screen ", show sid]
 
 barDestroyer :: DynamicStatusBarCleanup
 barDestroyer = pure ()
