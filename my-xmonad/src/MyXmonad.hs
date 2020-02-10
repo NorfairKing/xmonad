@@ -249,6 +249,8 @@ kinesisDvorakKeys XConfig {modMask = mod, terminal} =
     , ((mod .|. shiftMask, xK_Tab), previousWindow)
     , ((mod, xK_period), internet)
     , ((mod, xK_BackSpace), tileAgain)
+    , ((mod, xK_F5), lightDown)
+    , ((mod, xK_F6), lightUp)
     ] `M.union`
   keyboardMappingNavigationKeys mod kinesisDvorakKeyboardMapping
 
@@ -293,8 +295,8 @@ numpadQwertyKeys XConfig {modMask = mod, terminal} =
     , ((mod .|. shiftMask, xK_Tab), previousWindow)
     , ((mod, xK_b), internet)
     , ((mod, xK_BackSpace), tileAgain)
-    , ((mod, xK_F4), lightDown)
-    , ((mod, xK_F5), lightUp)
+    , ((mod, xK_F5), lightDown)
+    , ((mod, xK_F6), lightUp)
     ] `M.union`
   keyboardMappingNavigationKeys mod numpadQwertyKeyboardMapping
 
