@@ -33,7 +33,6 @@ myXmonad = do
   when setSetKeyboardLayout $
     spawn $ "xmodmap .keyboards/" ++ renderKeyboard setKeyboard
   spawn "xset r rate 250 30"
-  spawn $ setRedshift <> " -l 50:0"
   launch $
     def
       { normalBorderColor = "#657b83"
@@ -54,7 +53,6 @@ myXmonad = do
 data Settings =
   Settings
     { setXmobar :: FilePath
-    , setRedshift :: FilePath
     , setKeyboard :: KeyBoard
     , setSetKeyboardLayout :: Bool
     }
@@ -75,14 +73,6 @@ parseArgs =
        , metavar "PATH"
        , help "The path to the xmobar binary"
        , value "xmobar"
-       , showDefault
-       ]) <*>
-  strOption
-    (mconcat
-       [ long "redshift"
-       , metavar "PATH"
-       , help "The path to the redshift binary"
-       , value "redshift"
        , showDefault
        ]) <*>
   option
