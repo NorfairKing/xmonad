@@ -226,7 +226,7 @@ kinesisDvorakKeys :: XConfig Layout -> Map (ButtonMask, KeySym) (X ())
 kinesisDvorakKeys XConfig {modMask = mod, terminal} =
   M.fromList
     [ ((mod, xK_f), spawn terminal),
-      ((mod .|. shiftMask, xK_c), spawn terminalInSameDir),
+      ((mod .|. shiftMask, xK_f), spawn terminalInSameDir),
       ((mod, xK_y), closeWindow),
       -- Top row layout: [{+(= *)!}]
       ((mod, xK_braceleft), focusPrevScreen),
@@ -255,7 +255,7 @@ laptopDvorakKeys :: XConfig Layout -> Map (ButtonMask, KeySym) (X ())
 laptopDvorakKeys XConfig {modMask = mod, terminal} =
   M.fromList
     [ ((mod, xK_f), spawn terminal),
-      ((mod .|. shiftMask, xK_c), spawn terminalInSameDir),
+      ((mod .|. shiftMask, xK_f), spawn terminalInSameDir),
       ((mod, xK_d), closeWindow),
       ((mod, xK_o), focusWindowDown),
       ((mod .|. shiftMask, xK_o), swapWindowDown),
@@ -279,7 +279,7 @@ numpadQwertyKeys :: XConfig Layout -> Map (ButtonMask, KeySym) (X ())
 numpadQwertyKeys XConfig {modMask = mod, terminal} =
   M.fromList
     [ ((mod, xK_f), spawn terminal),
-      ((mod .|. shiftMask, xK_c), spawn terminalInSameDir),
+      ((mod .|. shiftMask, xK_f), spawn terminalInSameDir),
       ((mod, xK_d), closeWindow),
       ((mod, xK_o), focusWindowDown),
       ((mod .|. shiftMask, xK_o), swapWindowDown),
