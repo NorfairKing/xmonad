@@ -420,7 +420,7 @@ myStartupHook xmobarPath =
 
 barCreator :: FilePath -> DynamicStatusBar
 barCreator xmobarPath (S sid) =
-  spawnPipe $ unwords [xmobarPath, " --screen ", show sid]
+  spawnPipe $ unwords [xmobarPath, " --screen ", show sid, "+RTS", "-V0.1", "-C0.5", "-I0"]
 
 barDestroyer :: DynamicStatusBarCleanup
 barDestroyer = pure ()
