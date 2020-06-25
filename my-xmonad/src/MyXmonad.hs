@@ -378,10 +378,10 @@ lessWindows :: X ()
 lessWindows = sendMessage (IncMasterN (-1))
 
 lightUp :: X ()
-lightUp = spawn "light -A 5"
+lightUp = spawn "~/.brightness.sh +"
 
 lightDown :: X ()
-lightDown = spawn "light -U 5"
+lightDown = spawn "~/.brightness.sh -"
 
 myMouse :: XConfig Layout -> M.Map (KeyMask, Button) (Window -> X ())
 myMouse XConfig {modMask = mod} =

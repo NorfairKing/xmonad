@@ -10,4 +10,4 @@ nix:
   - xorg.libXrandr
   - xorg.libXScrnSaver
   - xorg.libXrender
-
+  - pkgconfig
