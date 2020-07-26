@@ -417,6 +417,8 @@ myStartupHook xmobarPath =
   do
     setWMName "LG3D"
     dynStatusBarStartup (barCreator xmobarPath) barDestroyer
+    internet
+    spawn "urxvt"
 
 barCreator :: FilePath -> DynamicStatusBar
 barCreator xmobarPath (S sid) =
