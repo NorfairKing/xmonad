@@ -247,7 +247,10 @@ kinesisDvorakKeys XConfig {modMask = mod, terminal} =
       ((mod, xK_period), internet),
       ((mod, xK_BackSpace), tileAgain),
       ((mod, xK_F5), lightDown),
-      ((mod, xK_F6), lightUp)
+      ((mod, xK_F6), lightUp),
+      ((mod, xK_F7), volumeDown),
+      ((mod, xK_F8), volumeUp),
+      ((mod, xK_F9), volumeMute)
     ]
     `M.union` keyboardMappingNavigationKeys mod kinesisDvorakKeyboardMapping
 
@@ -271,7 +274,10 @@ laptopDvorakKeys XConfig {modMask = mod, terminal} =
       ((mod, xK_b), internet),
       ((mod, xK_BackSpace), tileAgain),
       ((mod, xK_F5), lightDown),
-      ((mod, xK_F6), lightUp)
+      ((mod, xK_F6), lightUp),
+      ((mod, xK_F7), volumeDown),
+      ((mod, xK_F8), volumeUp),
+      ((mod, xK_F9), volumeMute)
     ]
     `M.union` keyboardMappingNavigationKeys mod laptopDvorakKeyboardMapping
 
@@ -295,7 +301,10 @@ numpadQwertyKeys XConfig {modMask = mod, terminal} =
       ((mod, xK_b), internet),
       ((mod, xK_BackSpace), tileAgain),
       ((mod, xK_F5), lightDown),
-      ((mod, xK_F6), lightUp)
+      ((mod, xK_F6), lightUp),
+      ((mod, xK_F7), volumeDown),
+      ((mod, xK_F8), volumeUp),
+      ((mod, xK_F9), volumeMute)
     ]
     `M.union` keyboardMappingNavigationKeys mod numpadQwertyKeyboardMapping
 
@@ -382,6 +391,15 @@ lightUp = spawn "~/.brightness.sh +"
 
 lightDown :: X ()
 lightDown = spawn "~/.brightness.sh -"
+
+volumeUp :: X ()
+volumeUp = spawn "amixer set Master 10%+"
+
+volumeDown :: X ()
+volumeDown = spawn "amixer set Master 10%-"
+
+volumeMute :: X ()
+volumeMute = spawn "amixer set Master toggle"
 
 myMouse :: XConfig Layout -> M.Map (KeyMask, Button) (Window -> X ())
 myMouse XConfig {modMask = mod} =
